@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import mate.academy.dto.user.UpdateUserRoleRequestDto;
@@ -176,7 +177,7 @@ class UserServiceImplTest {
         user.setFirstName("John");
         user.setLastName("Doe");
         user.setPassword(PASSWORD);
-        user.setRoles(Set.of(createRole(RoleName.CUSTOMER)));
+        user.setRoles(new HashSet<>(Set.of(createRole(RoleName.CUSTOMER))));
         return user;
     }
 
