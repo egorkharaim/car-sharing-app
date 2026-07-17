@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -104,5 +105,58 @@ class RentalControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.carId", is(3)))
                 .andExpect(jsonPath("$.userId", is(2)))
                 .andExpect(jsonPath("$.actualReturnDate").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "customer@example.com", roles = "CUSTOMER")
+    @DisplayName("Create rental with active rental returns bad request")
+    void createRental_CustomerWithActiveRental_ReturnsBadRequest() throws Exception {
+        // Given
+        CreateRentalRequestDto requestDto = new CreateRentalRequestDto(
+                3L,
+                LocalDate.now().plusDays(3)
+        );
+        String jsonRequest = objectMapper.writeValueAsString(requestDto);
+
+        // When
+        mockMvc.perform(post("/rentals")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                // Then
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is(
+                        "User already has an active rental and can't create a new one"
+                )));
+    }
+
+    @Test
+    @WithMockUser(username = "customer@example.com", roles = "CUSTOMER")
+    @DisplayName("Return overdue rental returns rental with actual return date")
+    void returnRental_OverdueRental_ReturnsReturnedRental() throws Exception {
+        // Given
+
+        // When
+        mockMvc.perform(patch("/rentals/{id}/return", 1)
+                        .with(csrf()))
+                // Then
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.userId", is(1)))
+                .andExpect(jsonPath("$.actualReturnDate").isNotEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "customer@example.com", roles = "CUSTOMER")
+    @DisplayName("Return already returned rental returns bad request")
+    void returnRental_AlreadyReturnedRental_ReturnsBadRequest() throws Exception {
+        // Given
+
+        // When
+        mockMvc.perform(patch("/rentals/{id}/return", 2)
+                        .with(csrf()))
+                // Then
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("Rental has already been returned")));
     }
 }

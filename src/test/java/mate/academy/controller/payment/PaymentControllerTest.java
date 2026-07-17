@@ -45,6 +45,25 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "customer@example.com", roles = "CUSTOMER")
+    @DisplayName("Get payments as customer ignores user id filter and returns own payments")
+    void getPayments_CustomerUserWithUserId_ReturnsOwnPayments() throws Exception {
+        // Given
+
+        // When
+        mockMvc.perform(get("/payments")
+                        .param("userId", "3")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "id,asc"))
+                // Then
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].rentalId", is(1)))
+                .andExpect(jsonPath("$.content[1].rentalId", is(2)));
+    }
+
+    @Test
     @WithMockUser(username = "manager@example.com", roles = "MANAGER")
     @DisplayName("Get payments as manager with user id filter returns selected user payments")
     void getPayments_ManagerWithUserId_ReturnsFilteredPayments() throws Exception {
