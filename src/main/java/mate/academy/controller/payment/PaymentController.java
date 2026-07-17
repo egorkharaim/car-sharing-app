@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "Payments", description = "Payment and Stripe integration endpoints")
 public class PaymentController {
+    private static final String CANCELED_PAYMENT_MESSAGE =
+            "Payment was canceled. You can complete it later, "
+                    + "but the Stripe session is available for 24 hours.";
 
     private final PaymentService paymentService;
     private final UserService userService;
@@ -60,8 +63,11 @@ public class PaymentController {
 
     @Operation(summary = "Handle canceled Stripe redirect")
     @GetMapping("/cancel")
-    public PaymentDto handleCanceledPayment(@RequestParam("session_id") String sessionId) {
-        return paymentService.handleCanceledPayment(sessionId);
+    public ResponseEntity<String> handleCanceledPayment(
+            @RequestParam("session_id") String sessionId
+    ) {
+        paymentService.handleCanceledPayment(sessionId);
+        return ResponseEntity.ok(CANCELED_PAYMENT_MESSAGE);
     }
 
     @Hidden

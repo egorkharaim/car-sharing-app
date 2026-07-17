@@ -3,6 +3,7 @@ package mate.academy.controller.payment;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -97,8 +98,8 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("Canceled payment redirect returns payment by session id")
-    void handleCanceledPayment_ExistingSession_ReturnsPayment() throws Exception {
+    @DisplayName("Canceled payment redirect returns payment paused message")
+    void handleCanceledPayment_ExistingSession_ReturnsPausedMessage() throws Exception {
         // Given
 
         // When
@@ -106,9 +107,9 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                         .param("session_id", "session-1"))
                 // Then
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.status", is("PENDING")))
-                .andExpect(jsonPath("$.type", is("PAYMENT")))
-                .andExpect(jsonPath("$.rentalId", is(1)));
+                .andExpect(content().string(
+                        "Payment was canceled. You can complete it later, "
+                                + "but the Stripe session is available for 24 hours."
+                ));
     }
 }
