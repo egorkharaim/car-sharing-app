@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset egorkharaim:create-cars-table
 CREATE TABLE cars
 (
     id BIGINT NOT NULL AUTO_INCREMENT,

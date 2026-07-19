@@ -41,11 +41,7 @@ public class CarServiceImpl implements CarService {
     @Override
     public CarDto update(Long id, CreateCarRequestDto requestDto) {
         Car car = getCarEntityById(id);
-        car.setBrand(requestDto.brand());
-        car.setModel(requestDto.model());
-        car.setType(requestDto.type());
-        car.setInventory(requestDto.inventory());
-        car.setDailyFee(requestDto.dailyFee());
+        carMapper.updateCarFromDto(requestDto, car);
         return carMapper.toDto(carRepository.save(car));
     }
 

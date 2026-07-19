@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset egorkharaim:create-users-table
 CREATE TABLE users
 (
     id BIGINT NOT NULL AUTO_INCREMENT,

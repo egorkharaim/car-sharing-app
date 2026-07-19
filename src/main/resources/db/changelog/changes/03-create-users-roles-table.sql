@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset egorkharaim:create-users-roles-table
 CREATE TABLE users_roles
 (
     user_id BIGINT NOT NULL,

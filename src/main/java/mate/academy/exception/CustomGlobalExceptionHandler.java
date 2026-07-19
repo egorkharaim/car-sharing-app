@@ -1,14 +1,10 @@
-package mate.academy.controller;
+package mate.academy.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import mate.academy.exception.EntityNotFoundException;
-import mate.academy.exception.PaymentProcessingException;
-import mate.academy.exception.RegistrationException;
-import mate.academy.exception.RentalProcessingException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;

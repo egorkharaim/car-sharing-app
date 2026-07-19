@@ -118,12 +118,8 @@ class CarServiceImplTest {
 
         // Then
         assertEquals(expected, actual);
-        assertEquals(requestDto.model(), car.getModel());
-        assertEquals(requestDto.brand(), car.getBrand());
-        assertEquals(requestDto.type(), car.getType());
-        assertEquals(requestDto.inventory(), car.getInventory());
-        assertEquals(requestDto.dailyFee(), car.getDailyFee());
         verify(carRepository).findById(CAR_ID);
+        verify(carMapper).updateCarFromDto(requestDto, car);
         verify(carRepository).save(car);
         verify(carMapper).toDto(car);
     }

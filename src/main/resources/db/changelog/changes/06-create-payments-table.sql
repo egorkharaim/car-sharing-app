@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset egorkharaim:create-payments-table
 CREATE TABLE payments
 (
     id BIGINT NOT NULL AUTO_INCREMENT,

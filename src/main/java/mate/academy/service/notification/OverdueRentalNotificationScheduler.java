@@ -17,7 +17,6 @@ public class OverdueRentalNotificationScheduler {
 
     @Scheduled(cron = "${telegram.overdue-cron}")
     public void notifyAboutOverdueRentals() {
-        // A rental becomes overdue only after its planned return date has already passed.
         LocalDate overdueThreshold = LocalDate.now().minusDays(1);
         List<Rental> overdueRentals =
                 rentalRepository.findAllByActualReturnDateIsNullAndReturnDateLessThanEqual(

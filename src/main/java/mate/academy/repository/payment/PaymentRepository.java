@@ -12,9 +12,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<Payment> findBySessionId(String sessionId);
 
-    // Helps prevent duplicate PAYMENT or duplicate FINE for the same rental.
     boolean existsByRentalIdAndType(Long rentalId, PaymentType type);
 
-    // Useful when CUSTOMER should only access their own payments.
     Optional<Payment> findByIdAndRentalUserId(Long paymentId, Long userId);
 }

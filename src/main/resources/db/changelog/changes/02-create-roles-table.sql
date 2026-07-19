@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset egorkharaim:create-roles-table
 CREATE TABLE roles
 (
     id BIGINT NOT NULL AUTO_INCREMENT,

@@ -1,3 +1,5 @@
+--liquibase formatted sql
+--changeset egorkharaim:create-rentals-table
 CREATE TABLE rentals
 (
     id BIGINT NOT NULL AUTO_INCREMENT,

@@ -1,6 +1,5 @@
 package mate.academy.service.user;
 
-import java.util.HashSet;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.user.UpdateUserProfileRequestDto;
@@ -40,8 +39,9 @@ public class UserServiceImpl implements UserService {
 
         Role customerRole = roleRepository.findByName(RoleName.CUSTOMER)
                 .orElseThrow(() ->
-                        new RegistrationException("Can't find default role CUSTOMER"));
-        user.setRoles(new HashSet<>(Set.of(customerRole)));
+                        new EntityNotFoundException("Can't find default role "
+                                + RoleName.CUSTOMER));
+        user.setRoles(Set.of(customerRole));
 
         return userMapper.toDto(userRepository.save(user));
     }

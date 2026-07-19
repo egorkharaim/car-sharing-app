@@ -42,6 +42,65 @@ payments, users, and administrator notifications.
 - Stripe account in test mode
 - Telegram bot and chat id, if notifications are enabled
 
+## Clone Project
+
+```bash
+git clone https://github.com/egorkharaim/car-sharing-app.git
+cd car-sharing-app
+```
+
+## Model Diagram
+
+```mermaid
+erDiagram
+    USERS {
+        bigint id PK
+        varchar email
+        varchar first_name
+        varchar last_name
+        varchar password
+    }
+    ROLES {
+        bigint id PK
+        varchar name
+    }
+    USERS_ROLES {
+        bigint user_id FK
+        bigint role_id FK
+    }
+    CARS {
+        bigint id PK
+        varchar model
+        varchar brand
+        varchar type
+        int inventory
+        decimal daily_fee
+    }
+    RENTALS {
+        bigint id PK
+        date rental_date
+        date return_date
+        date actual_return_date
+        bigint car_id FK
+        bigint user_id FK
+    }
+    PAYMENTS {
+        bigint id PK
+        varchar status
+        varchar type
+        bigint rental_id FK
+        varchar session_url
+        varchar session_id
+        decimal amount_to_pay
+    }
+
+    USERS ||--o{ USERS_ROLES : has
+    ROLES ||--o{ USERS_ROLES : assigned
+    USERS ||--o{ RENTALS : creates
+    CARS ||--o{ RENTALS : reserved
+    RENTALS ||--o{ PAYMENTS : generates
+```
+
 ## Environment
 
 Copy the sample file and fill in local values:
@@ -340,5 +399,5 @@ Docker Desktop must be running.
 ## Notes
 
 - Real secrets must stay in `.env` or environment variables.
-- The repository contains only `.env.sample` and `.env.example` with placeholder values.
+- The repository contains only `.env.sample` without real values.
 - The project is designed for test Stripe payments only.
