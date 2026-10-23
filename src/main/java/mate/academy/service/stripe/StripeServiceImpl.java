@@ -4,6 +4,7 @@ import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
+import com.stripe.net.RequestOptions;
 import com.stripe.param.checkout.SessionCreateParams;
 import java.math.BigDecimal;
 import mate.academy.dto.payment.StripeSessionDto;
@@ -77,7 +78,9 @@ public class StripeServiceImpl implements StripeService {
 
             Session session = stripeClient.v1().checkout()
                     .sessions()
-                    .create(params);
+                    .create(params, RequestOptions.builder()
+                            .setIdempotencyKey("payment-checkout-" + payment.getId())
+                            .build());
 
             return new StripeSessionDto(session.getId(), session.getUrl());
         } catch (StripeException e) {

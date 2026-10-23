@@ -36,6 +36,30 @@ class RentalControllerTest extends AbstractIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(username = "manager@example.com", roles = "MANAGER")
+    @DisplayName("Manager without user filter sees all rentals")
+    void getRentals_ManagerWithoutFilter_ReturnsAllRentals() throws Exception {
+        // Given
+        // When
+        mockMvc.perform(get("/rentals"))
+                // Then
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(3)));
+    }
+
+    @Test
+    @WithMockUser(username = "manager@example.com", roles = "MANAGER")
+    @DisplayName("Manager can filter all users active rentals")
+    void getRentals_ManagerActiveFilter_ReturnsActiveRentals() throws Exception {
+        // Given
+        // When
+        mockMvc.perform(get("/rentals").param("isActive", "true"))
+                // Then
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)));
+    }
+
+    @Test
     @WithMockUser(username = "customer@example.com", roles = "CUSTOMER")
     @DisplayName("Get current customer rentals returns own rentals")
     void getRentals_CustomerUser_ReturnsOwnRentals() throws Exception {

@@ -137,7 +137,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PaymentDto handleCanceledPayment(String sessionId) {
         Payment payment = findBySessionId(sessionId);
         return paymentMapper.toDto(payment);
@@ -164,6 +163,10 @@ public class PaymentServiceImpl implements PaymentService {
             throw new PaymentProcessingException(
                     "Stripe webhook does not contain a checkout session object"
             );
+        }
+
+        if (!"paid".equals(session.getPaymentStatus())) {
+            return;
         }
 
         Payment payment = findBySessionId(session.getId());

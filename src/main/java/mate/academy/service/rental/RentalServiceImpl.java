@@ -13,6 +13,7 @@ import mate.academy.model.user.RoleName;
 import mate.academy.model.user.User;
 import mate.academy.repository.car.CarRepository;
 import mate.academy.repository.rental.RentalRepository;
+import mate.academy.repository.user.UserRepository;
 import mate.academy.service.notification.NotificationMessageBuilder;
 import mate.academy.service.notification.NotificationService;
 import mate.academy.service.payment.PaymentService;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RentalServiceImpl implements RentalService {
     private final RentalRepository rentalRepository;
     private final CarRepository carRepository;
+    private final UserRepository userRepository;
     private final PaymentService paymentService;
     private final RentalMapper rentalMapper;
     private final NotificationService notificationService;
@@ -34,6 +36,8 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     public RentalDto createRental(CreateRentalRequestDto requestDto, User currentUser) {
+        userRepository.findByIdForUpdate(currentUser.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Can't find current user"));
         if (rentalRepository.existsByUserIdAndActualReturnDateIsNull(currentUser.getId())) {
             throw new RentalProcessingException(
                     "User already has an active rental and can't create a new one");
@@ -71,7 +75,7 @@ public class RentalServiceImpl implements RentalService {
             Pageable pageable
     ) {
         Page<Rental> rentals;
-        if (isManager(currentUser) && userId != null) {
+        if (isManager(currentUser)) {
             rentals = loadRentalsByActiveFlag(userId, isActive, pageable);
         } else {
             rentals = loadRentalsByActiveFlag(currentUser.getId(), isActive, pageable);
@@ -92,7 +96,7 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     public RentalDto returnRental(Long id, User currentUser) {
-        Rental rental = rentalRepository.findById(id)
+        Rental rental = rentalRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Can't find rental by id: " + id));
         validateAccess(rental, currentUser);
@@ -102,7 +106,8 @@ public class RentalServiceImpl implements RentalService {
         }
 
         rental.setActualReturnDate(LocalDate.now());
-        Car car = rental.getCar();
+        Car car = carRepository.findByIdForUpdate(rental.getCar().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Can't find rented car"));
         car.setInventory(car.getInventory() + 1);
         carRepository.save(car);
         Rental savedRental = rentalRepository.save(rental);
@@ -113,6 +118,15 @@ public class RentalServiceImpl implements RentalService {
     }
 
     private Page<Rental> loadRentalsByActiveFlag(Long userId, Boolean isActive, Pageable pageable) {
+        if (userId == null) {
+            if (Boolean.TRUE.equals(isActive)) {
+                return rentalRepository.findAllByActualReturnDateIsNull(pageable);
+            }
+            if (Boolean.FALSE.equals(isActive)) {
+                return rentalRepository.findAllByActualReturnDateIsNotNull(pageable);
+            }
+            return rentalRepository.findAll(pageable);
+        }
         if (Boolean.TRUE.equals(isActive)) {
             return rentalRepository.findAllByUserIdAndActualReturnDateIsNull(userId, pageable);
         }

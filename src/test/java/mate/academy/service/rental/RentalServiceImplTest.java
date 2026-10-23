@@ -23,6 +23,7 @@ import mate.academy.model.user.RoleName;
 import mate.academy.model.user.User;
 import mate.academy.repository.car.CarRepository;
 import mate.academy.repository.rental.RentalRepository;
+import mate.academy.repository.user.UserRepository;
 import mate.academy.service.notification.NotificationMessageBuilder;
 import mate.academy.service.notification.NotificationService;
 import mate.academy.service.payment.PaymentService;
@@ -45,6 +46,8 @@ class RentalServiceImplTest {
     @Mock
     private CarRepository carRepository;
     @Mock
+    private UserRepository userRepository;
+    @Mock
     private PaymentService paymentService;
     @Mock
     private RentalMapper rentalMapper;
@@ -60,6 +63,7 @@ class RentalServiceImplTest {
     void createRental_ValidRequest_ReturnsRentalDto() {
         // Given
         User user = createUser(USER_ID, RoleName.CUSTOMER);
+        when(userRepository.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(user));
         Car car = createCar(2);
         CreateRentalRequestDto requestDto = new CreateRentalRequestDto(
                 CAR_ID,
@@ -97,6 +101,7 @@ class RentalServiceImplTest {
     void createRental_UserHasActiveRental_ThrowsException() {
         // Given
         User user = createUser(USER_ID, RoleName.CUSTOMER);
+        when(userRepository.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(user));
         CreateRentalRequestDto requestDto = new CreateRentalRequestDto(
                 CAR_ID,
                 LocalDate.now().plusDays(3)
@@ -124,6 +129,7 @@ class RentalServiceImplTest {
     void createRental_UnavailableCar_ThrowsException() {
         // Given
         User user = createUser(USER_ID, RoleName.CUSTOMER);
+        when(userRepository.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(user));
         CreateRentalRequestDto requestDto = new CreateRentalRequestDto(
                 CAR_ID,
                 LocalDate.now().plusDays(3)
@@ -153,8 +159,8 @@ class RentalServiceImplTest {
         Rental rental = createRental(user, car);
         rental.setReturnDate(LocalDate.now().minusDays(2));
         RentalDto expected = createRentalDto(rental);
-        when(rentalRepository.findById(RENTAL_ID)).thenReturn(Optional.of(rental));
-        when(carRepository.save(car)).thenReturn(car);
+        when(rentalRepository.findByIdForUpdate(RENTAL_ID)).thenReturn(Optional.of(rental));
+        when(carRepository.findByIdForUpdate(CAR_ID)).thenReturn(Optional.of(car));
         when(rentalRepository.save(rental)).thenReturn(rental);
         when(rentalMapper.toDto(rental)).thenReturn(expected);
 
@@ -165,7 +171,7 @@ class RentalServiceImplTest {
         assertEquals(expected, actual);
         assertEquals(LocalDate.now(), rental.getActualReturnDate());
         assertEquals(2, car.getInventory());
-        verify(rentalRepository).findById(RENTAL_ID);
+        verify(rentalRepository).findByIdForUpdate(RENTAL_ID);
         verify(carRepository).save(car);
         verify(rentalRepository).save(rental);
         verify(paymentService).createFinePayment(rental);

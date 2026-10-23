@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.stripe.model.Event;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -61,6 +62,51 @@ class PaymentServiceImplTest {
     private NotificationMessageBuilder notificationMessageBuilder;
     @InjectMocks
     private PaymentServiceImpl paymentService;
+
+    @Test
+    @DisplayName("Unpaid checkout webhook leaves payment pending")
+    void handleStripeWebhook_UnpaidSession_DoesNotSavePayment() {
+        // Given
+        Event event = checkoutEvent("unpaid");
+        when(stripeService.constructWebhookEvent("payload", "signature")).thenReturn(event);
+
+        // When
+        paymentService.handleStripeWebhook("payload", "signature");
+
+        // Then
+        verify(paymentRepository, never()).save(any());
+        verify(notificationService, never()).sendMessage(any());
+    }
+
+    @Test
+    @DisplayName("Repeated paid webhook saves and notifies only once")
+    void handleStripeWebhook_RepeatedPaidEvent_NotifiesOnce() {
+        // Given
+        Event event = checkoutEvent("paid");
+        Payment payment = createPayment(PaymentType.PAYMENT, PaymentStatus.PENDING);
+        when(stripeService.constructWebhookEvent("payload", "signature")).thenReturn(event);
+        when(paymentRepository.findBySessionId(SESSION_ID)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(payment)).thenReturn(payment);
+        when(notificationMessageBuilder.buildSuccessfulPaymentMessage(payment))
+                .thenReturn(PAYMENT_MESSAGE);
+
+        // When
+        paymentService.handleStripeWebhook("payload", "signature");
+        paymentService.handleStripeWebhook("payload", "signature");
+
+        // Then
+        assertEquals(PaymentStatus.PAID, payment.getStatus());
+        verify(paymentRepository).save(payment);
+        verify(notificationService).sendMessage(PAYMENT_MESSAGE);
+    }
+
+    private Event checkoutEvent(String paymentStatus) {
+        return Event.GSON.fromJson("""
+                {"id":"evt_test","object":"event","type":"checkout.session.completed",
+                "data":{"object":{"id":"cs_test_123","object":"checkout.session",
+                "payment_status":"%s"}}}
+                """.formatted(paymentStatus), Event.class);
+    }
 
     @Test
     @DisplayName("Create rental payment calculates planned amount and saves pending payment")
