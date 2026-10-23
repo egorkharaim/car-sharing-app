@@ -1,0 +1,45 @@
+services:
+  app:
+    build: .
+    container_name: car-sharing-app
+    restart: unless-stopped
+    environment:
+      MYSQLDB_URL: jdbc:mysql://mysql:3306/${MYSQLDB_DATABASE:-car_sharing}?serverTimezone=UTC
+      MYSQLDB_USER: ${MYSQLDB_USER:-root}
+      MYSQLDB_ROOT_PASSWORD: ${MYSQLDB_ROOT_PASSWORD:-password}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-secret-key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3000000}
+      APP_BASE_URL: http://localhost:8080
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_CURRENCY: ${STRIPE_CURRENCY:-usd}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      TELEGRAM_API_URL: ${TELEGRAM_API_URL:-https://api.telegram.org}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TELEGRAM_OVERDUE_CRON: ${TELEGRAM_OVERDUE_CRON:-0 0 9 * * *}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0.33
+    container_name: car-sharing-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQLDB_DATABASE:-car_sharing}
+      MYSQL_ROOT_PASSWORD: ${MYSQLDB_ROOT_PASSWORD:-password}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:
